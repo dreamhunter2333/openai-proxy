@@ -1,15 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
-
-	"github.com/yalp/jsonpath"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,7 +16,7 @@ var authPrefix = "Bearer "
 
 func getProxyUrl() *http.Transport {
 	// Check if HTTP_PROXY environment variable is set
-	if proxyUrl, ok := os.LookupEnv("http_proxy"); ok {
+	if proxyUrl, ok := os.LookupEnv("HTTP_PROXY"); ok {
 		fmt.Println("HTTP_PROXY: " + proxyUrl)
 		proxyURL, _ := url.Parse(proxyUrl)
 		transport := &http.Transport{
@@ -60,35 +57,7 @@ func proxy(c *gin.Context, transport *http.Transport) (*http.Response, error) {
 	return client.Do(req)
 }
 
-func getTotalTokens(respBody []byte) (int, error) {
-	var data interface{}
-	err := json.Unmarshal(respBody, &data)
-	if err != nil {
-		return 0, err
-	}
-	result, err := jsonpath.Read(data, "$.usage.total_tokens")
-	if err != nil {
-		return 0, err
-	}
-	return int(result.(float64)), nil
-}
-
-func checkSelfApiKey(selfApiKey string) error {
-	// TODO: check selfApiKey and balance
-	return nil
-}
-
-func increaseSelfApiKeyTokens(respBody []byte, selfApiKey string) error {
-	totalTokens, err := getTotalTokens(respBody)
-	if err != nil {
-		return err
-	}
-	// TODO: count totalTokens in db
-	fmt.Println(selfApiKey, totalTokens)
-	return nil
-}
-
-func handler(c *gin.Context, transport *http.Transport, apiKey string) {
+func handler(c *gin.Context, transport *http.Transport, apiKey string, config ApiConfig) {
 	var selfApiKey string = ""
 	// use self API_KEY
 	if apiKey != "" {
@@ -96,6 +65,12 @@ func handler(c *gin.Context, transport *http.Transport, apiKey string) {
 		if authHeader != "" && strings.HasPrefix(authHeader, authPrefix) {
 			selfApiKey = strings.TrimPrefix(authHeader, authPrefix)
 			c.Request.Header.Set("Authorization", authPrefix+apiKey)
+		}
+		res := checkSelfApiKey(selfApiKey, config)
+		if !res {
+			fmt.Println("Wrong key or no balance: ", selfApiKey)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Wrong key or no balance"})
+			return
 		}
 	}
 	resp, err := proxy(c, transport)
@@ -115,6 +90,7 @@ func handler(c *gin.Context, transport *http.Transport, apiKey string) {
 	if selfApiKey != "" {
 		err := increaseSelfApiKeyTokens(respBody, selfApiKey)
 		if err != nil {
+			fmt.Println("increaseSelfApiKeyTokens err: ", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -134,9 +110,10 @@ func main() {
 	r := gin.Default()
 	transport := getProxyUrl()
 	apiKey := getApiKey()
+	config := getConfig()
 
 	r.Any("/*path", func(c *gin.Context) {
-		handler(c, transport, apiKey)
+		handler(c, transport, apiKey, config)
 	})
 
 	r.Run(":8080")

@@ -1,6 +1,6 @@
 import openai
 
-openai.api_key = "sk-xxx"
+openai.api_key = "xxx"
 openai.api_base = "http://localhost:8080/v1"
 
 # create a completion

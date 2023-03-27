@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  proxy:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: proxy
+    ports:
+      - "8080:8080"
+    environment:
+      - API_KEY=xxx
+
+  redis:
+    image: redis
+    container_name: redis
+    network_mode: service:proxy
+    # ports:
+    #   - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  redis_data:
