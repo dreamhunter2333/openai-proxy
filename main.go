@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
+
+	limits "github.com/gin-contrib/size"
 
 	"github.com/gin-gonic/gin"
 )
@@ -111,6 +114,15 @@ func main() {
 	transport := getProxyUrl()
 	apiKey := getApiKey()
 	config := getConfig()
+
+	if reqLimit, ok := os.LookupEnv("REQ_LIMIT"); ok {
+		fmt.Println("RequestSizeLimiter: ", reqLimit)
+		reqLimitInt, err := strconv.Atoi(reqLimit)
+		if err != nil {
+			panic(err)
+		}
+		r.Use(limits.RequestSizeLimiter(int64(reqLimitInt)))
+	}
 
 	r.Any("/*path", func(c *gin.Context) {
 		handler(c, transport, apiKey, config)

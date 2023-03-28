@@ -7,12 +7,13 @@ services:
       dockerfile: docker/Dockerfile
     container_name: proxy
     ports:
-      - "8080:8080"
+      - "9999:8080"
     volumes:
       - ../config.yaml:/config.yaml
     environment:
       - API_KEY=xxx
       - CONF_PATH=/config.yaml
+      - REQ_LIMIT=10000
       # - HTTP_PROXY=xxx
       - REDIS_HOST=localhost:6379
       # - REDIS_PASS=xxx
@@ -21,6 +22,8 @@ services:
     image: redis
     container_name: redis
     network_mode: service:proxy
+    # ports:
+    #   - "6379:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
