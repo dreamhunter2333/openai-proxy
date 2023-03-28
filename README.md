@@ -6,14 +6,9 @@
 - [x] 代理 openai
 - [ ] check 请求是否超 token
 
-
 ## docker 部署
 
-修改 `docker/docker-compose.yaml` 文件
-
-```bash
-docker compose -f docker/docker-compose.yaml up
-```
+### 仅代理
 
 ```yaml
 version: '3'
@@ -26,23 +21,12 @@ services:
     container_name: proxy
     ports:
       - "8080:8080"
-    volumes:
-      - ./config.yaml:/config.yaml
-    environment:
-      - API_KEY=xxx
-      - CONF_PATH=/
-      # - HTTP_PROXY=xxx
-      - REDIS_HOST=localhost:6379
-      # - REDIS_PASS=xxx
+```
 
-  redis:
-    image: redis
-    container_name: redis
-    network_mode: service:proxy
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
+### 代理加计费
 
-volumes:
-  redis_data:
+修改 `docker/docker-compose.yaml` 文件
+
+```bash
+docker compose -f docker/docker-compose.yaml up
 ```
