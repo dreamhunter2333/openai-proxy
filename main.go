@@ -113,7 +113,10 @@ func main() {
 	r := gin.Default()
 	transport := getProxyUrl()
 	apiKey := getApiKey()
-	config := getConfig()
+	var config ApiConfig
+	if apiKey != "" {
+		config = getConfig()
+	}
 
 	if reqLimit, ok := os.LookupEnv("REQ_LIMIT"); ok {
 		fmt.Println("RequestSizeLimiter: ", reqLimit)
