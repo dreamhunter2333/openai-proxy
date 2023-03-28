@@ -5,7 +5,7 @@ RUN go build -o app .
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
-WORKDIR /root/
+WORKDIR /
 ENV PORT=8080
 COPY --from=builder /app/app .
 EXPOSE $PORT

@@ -8,15 +8,19 @@ services:
     container_name: proxy
     ports:
       - "8080:8080"
+    volumes:
+      - ../config.yaml:/config.yaml
     environment:
       - API_KEY=xxx
+      - CONF_PATH=/config.yaml
+      # - HTTP_PROXY=xxx
+      - REDIS_HOST=localhost:6379
+      # - REDIS_PASS=xxx
 
   redis:
     image: redis
     container_name: redis
     network_mode: service:proxy
-    # ports:
-    #   - "6379:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes

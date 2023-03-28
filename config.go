@@ -12,13 +12,12 @@ type ApiConfig struct {
 }
 
 func getConfig() ApiConfig {
-	configPath := "."
+	configPath := "config.yaml"
 	if configPath, ok := os.LookupEnv("CONF_PATH"); ok {
 		fmt.Println("CONF_PATH: " + configPath)
 	}
 	// 设置viper的配置文件名和路径
-	viper.SetConfigName("config")   // 文件名(不带后缀)
-	viper.AddConfigPath(configPath) // 相对路径
+	viper.SetConfigFile(configPath) // 文件名(不带后缀)
 
 	// 读取配置文件
 	err := viper.ReadInConfig()
